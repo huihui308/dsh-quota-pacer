@@ -194,7 +194,7 @@ window.__ModuleLoader__.load({
         h('div', { className: 'qp-time', style: { left: time + '%' }, title: '时间进度 ' + fmtPct(result.timePercent) }))
     }
 
-    function WindowRow({ kind, result }) {
+    function WindowRow({ kind, result, showAmount = true }) {
       if (!result) return null
       const verdict = VERDICT[result.verdict] ?? VERDICT.unknown
       return h('div', { className: 'qp-win' },
@@ -213,8 +213,8 @@ window.__ModuleLoader__.load({
           h('div', null, h('div', { className: 'qp-metric-label' }, '剩余额度'), h('div', { className: 'qp-metric-value' }, fmtPct(result.remainingFrac * 100))),
           h('div', null, h('div', { className: 'qp-metric-label' }, '剩余时间'), h('div', { className: 'qp-metric-value' }, fmtDuration(result.remainingMs))),
           h('div', null, h('div', { className: 'qp-metric-label' }, result.budget?.unit === 'hour' ? '每小时可用' : '每天可用'), h('div', { className: 'qp-metric-value' }, result.budget?.value !== null && result.budget?.value !== undefined ? fmtPct(result.budget.value * 100) : '—')),
-          result.limit !== null ? h('div', null, h('div', { className: 'qp-metric-label' }, '窗口额度'), h('div', { className: 'qp-metric-value' }, fmtMoney(result.limit))) : null),
-        result.usedAmount !== null ? h('div', { className: 'qp-note' }, '套餐折算：已用 ' + fmtMoney(result.usedAmount) + ' / ' + fmtMoney(result.limit) + '（按官方百分比 × 窗口额度）') : null,
+          showAmount && result.limit !== null ? h('div', null, h('div', { className: 'qp-metric-label' }, '窗口额度'), h('div', { className: 'qp-metric-value' }, fmtMoney(result.limit))) : null),
+        showAmount && result.usedAmount !== null ? h('div', { className: 'qp-note' }, '套餐折算：已用 ' + fmtMoney(result.usedAmount) + ' / ' + fmtMoney(result.limit) + '（按官方百分比 × 窗口额度）') : null,
         h('div', { className: 'qp-advice', 'data-tone': verdict.tone }, adviceOf(result)))
     }
 
@@ -240,7 +240,7 @@ window.__ModuleLoader__.load({
           ? h('div', { className: 'qp-error' }, source.error || '查询失败')
           : windows.length === 0
             ? h('div', { className: 'qp-empty' }, '没有启用任何窗口。到「显示设置」里勾选 5 小时 / 周 / 月。')
-            : windows.map(([kind, result]) => h(WindowRow, { key: kind, kind, result })),
+            : windows.map(([kind, result]) => h(WindowRow, { key: kind, kind, result, showAmount: source.showAmount !== false })),
         h('div', { className: 'qp-note' },
           '来源：' + (source.keySource || '—') + ' · 官方 usage · 刷新于 ' + fmtTime(source.fetchedAt) +
           (source.modelFound === false ? ' · 主模型不在官方目录，金额不可用' : '') +
