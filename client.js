@@ -107,23 +107,36 @@ window.__ModuleLoader__.load({
       '.qp-toast[data-kind="err"]{color:var(--dsw-alias-state-error-primary)}',
       '.qp-empty{color:var(--dsw-alias-label-tertiary);font-size:12px;padding:18px 0}',
       '.qp-note{font-size:10.5px;color:var(--dsw-alias-label-tertiary);line-height:1.5;margin-top:8px}',
-      '.qp-side{width:100%;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-bg-base) 90%,#000 10%);backdrop-filter:blur(14px);padding:7px 9px;margin:2px 0;cursor:pointer;font-size:11px;color:var(--dsw-alias-label-primary)}',
+      '.qp-side{width:100%;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-bg-base) 90%,#000 10%);backdrop-filter:blur(14px);padding:6px 8px;margin:2px 0;cursor:pointer;font-size:11px;color:var(--dsw-alias-label-primary)}',
       '.qp-side:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       '.qp-side:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}',
-      '.qp-side-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;font-size:10.5px;color:var(--dsw-alias-label-tertiary)}',
+      '.qp-side-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;font-size:10.5px;color:var(--dsw-alias-label-tertiary)}',
       '.qp-side-title{font-weight:650;color:var(--dsw-alias-label-secondary);letter-spacing:.02em}',
       '.qp-side-open{font-size:10px;color:var(--dsw-alias-label-tertiary)}',
-      '.qp-side-row{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;padding:3px 0;border-top:1px solid var(--dsw-alias-border-l1);line-height:1.3;min-width:0}',
+      '.qp-side-row{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;padding:2px 0;border-top:1px solid var(--dsw-alias-border-l1);line-height:1.3;min-width:0}',
       '.qp-side-name{width:50px;flex:0 0 auto;color:var(--dsw-alias-label-tertiary);font-size:10.5px}',
       '.qp-side-pill{display:inline-flex;align-items:center;gap:3px;border-radius:999px;padding:1px 6px;font-size:10px;font-weight:600;white-space:nowrap}',
       '.qp-side-pill[data-peak="1"]{color:var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary));background:color-mix(in srgb,var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary)) 12%,transparent)}',
       '.qp-side-pill[data-peak="0"]{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent)}',
       '.qp-side-next{margin-left:auto;font-size:10px;color:var(--dsw-alias-label-tertiary);white-space:nowrap;flex:0 0 auto}',
-      '.qp-side-nums{font-size:10.5px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}',
-      '.qp-side-verdict{margin-left:auto;font-size:10px;white-space:nowrap;color:var(--dsw-alias-label-tertiary);flex:0 0 auto}',
-      '.qp-side-verdict[data-tone="warn"]{color:var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary))}',
-      '.qp-side-verdict[data-tone="danger"]{color:var(--dsw-alias-state-error-primary)}',
-      '.qp-side-verdict[data-tone="ok"]{color:var(--dsw-alias-state-success-primary)}',
+      '.qp-side-go{margin-top:1px}',
+      '.qp-side-section{display:flex;align-items:center;gap:5px;padding:1px 0 0;font-size:9px;color:var(--dsw-alias-label-tertiary)}',
+      '.qp-side-section-name{font-weight:650;color:var(--dsw-alias-label-secondary)}',
+      '.qp-side-gophase{display:inline-flex;align-items:center;gap:3px;border-radius:999px;padding:0 5px;font-size:9px;font-weight:600}',
+      '.qp-side-gophase[data-peak="1"]{color:var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary));background:color-mix(in srgb,var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary)) 12%,transparent)}',
+      '.qp-side-gophase[data-peak="0"]{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent)}',
+      '.qp-side-win{display:flex;align-items:center;gap:5px;padding:1px 0;font-size:10px;line-height:1.15;min-width:0}',
+      '.qp-side-win-label{width:20px;flex:0 0 auto;color:var(--dsw-alias-label-tertiary);font-size:9.5px}',
+      '.qp-side-bar{position:relative;flex:1 1 auto;min-width:42px;height:5px;border-radius:999px;background:var(--dsw-alias-bg-layer-2);overflow:visible}',
+      '.qp-side-fill{height:100%;min-width:3px;border-radius:999px;background:var(--dsw-alias-brand-primary)}',
+      '.qp-side-fill[data-tone="warn"]{background:var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary))}',
+      '.qp-side-fill[data-tone="danger"]{background:var(--dsw-alias-state-error-primary)}',
+      '.qp-side-tick{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--dsw-alias-label-secondary);opacity:.65}',
+      '.qp-side-win-pct{width:27px;flex:0 0 auto;text-align:right;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-secondary)}',
+      '.qp-side-win-pace{width:35px;flex:0 0 auto;text-align:right;font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-tertiary)}',
+      '.qp-side-win-pace[data-tone="warn"]{color:var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary))}',
+      '.qp-side-win-pace[data-tone="danger"]{color:var(--dsw-alias-state-error-primary)}',
+      '.qp-side-win-empty{font-size:10px;color:var(--dsw-alias-label-tertiary)}',
       '.qp-side-error{margin-top:4px;font-size:10px;color:var(--dsw-alias-state-error-primary);line-height:1.4}',
     ].join('')
 
@@ -432,14 +445,10 @@ window.__ModuleLoader__.load({
       const go = state?.sources?.find((item) => item.id === 'opencode-go')
       const ds = state?.sources?.find((item) => item.id === 'deepseek-official')
       const list = go ? WINDOW_ORDER.map((kind) => ({ kind, result: go.windows?.[kind] })).filter((item) => item.result?.ok) : []
-      const rank = { over: 4, fast: 3, onTrack: 2, ahead: 1, unknown: 0 }
-      const worst = [...list].sort((a, b) => (rank[b.result.verdict] ?? 0) - (rank[a.result.verdict] ?? 0) || (b.result.pace ?? 0) - (a.result.pace ?? 0))[0]
-      const verdict = VERDICT[worst?.result?.verdict ?? 'unknown'] ?? VERDICT.unknown
       const phase = ds?.phase
       const peak = phase?.peak === true
       const remaining = phase?.nextAt ? Math.max(0, phase.nextAt - now) : 0
       const nextName = phase?.nextInPeak ? '峰' : '谷'
-      const goNums = list.map(({ kind, result }) => (WINDOW_SHORT[kind] || kind) + ' ' + Math.round(result.percent) + '%').join(' · ')
 
       const openFull = () => {
         const nodes = [...document.querySelectorAll('[role="tab"], button')]
@@ -464,11 +473,27 @@ window.__ModuleLoader__.load({
             (peak ? '☀ 峰 ' : '☾ 谷 ') + phase.multiplier + '×'),
           h('span', { className: 'qp-side-next' },
             (phase.nextLabel || '—') + '转' + nextName + ' · ' + fmtShortDuration(remaining))) : null,
-        go ? h('div', { className: 'qp-side-row' },
-          h('span', { className: 'qp-side-name' }, 'Go'),
-          h('span', { className: 'qp-side-nums' }, goNums || '暂无窗口'),
-          worst ? h('span', { className: 'qp-side-verdict', 'data-tone': verdict.tone, title: (WINDOW_LABEL[worst.kind] || '') + ' ' + fmtPace(worst.result.pace) + ' · ' + verdict.label },
-            (worst.result.verdict === 'over' ? '⚠ ' : worst.result.verdict === 'fast' ? '! ' : '') + (WINDOW_SHORT[worst.kind] || '') + ' ' + fmtPace(worst.result.pace)) : null) : null,
+        go ? h('div', { className: 'qp-side-go' },
+          h('div', { className: 'qp-side-section' },
+            h('span', { className: 'qp-side-section-name' }, 'Go'),
+            go.phase ? h('span', { className: 'qp-side-gophase', 'data-peak': go.phase.peak ? '1' : '0' },
+              (go.phase.peak ? '☀ 峰 ' : '☾ 谷 ') + go.phase.multiplier + '×') : null),
+          list.length === 0
+            ? h('div', { className: 'qp-side-win' }, h('span', { className: 'qp-side-win-label' }, '—'), h('span', { className: 'qp-side-win-empty' }, '暂无窗口'))
+            : list.map(({ kind, result }) => {
+              const tone = result.verdict === 'over' ? 'danger' : result.verdict === 'fast' ? 'warn' : ''
+              const label = WINDOW_LABEL[kind] || kind
+              return h('div', {
+                className: 'qp-side-win', key: kind,
+                title: label + '：已用 ' + fmtPct(result.percent) + ' / 时间 ' + fmtPct(result.timePercent) + ' / 配速 ' + fmtPace(result.pace) + ' / ' + ((VERDICT[result.verdict] ?? VERDICT.unknown).label),
+              },
+                h('span', { className: 'qp-side-win-label' }, WINDOW_SHORT[kind] || label),
+                h('div', { className: 'qp-side-bar' },
+                  h('div', { className: 'qp-side-fill', 'data-tone': tone, style: { width: Math.min(100, Math.max(0, result.percent)) + '%' } }),
+                  h('div', { className: 'qp-side-tick', style: { left: Math.min(100, Math.max(0, result.timePercent)) + '%' } })),
+                h('span', { className: 'qp-side-win-pct' }, Math.round(result.percent) + '%'),
+                h('span', { className: 'qp-side-win-pace', 'data-tone': tone }, fmtPace(result.pace)))
+            })) : null,
         error ? h('div', { className: 'qp-side-error' }, error) : null))
     }
 
