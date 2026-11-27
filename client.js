@@ -9,7 +9,9 @@ window.__ModuleLoader__.load({
   factory(require) {
     const React = require('react')
     const h = React.createElement
-    const { useCallback, useEffect, useMemo, useState } = React
+    let createPortal = null
+    try { createPortal = require('react-dom').createPortal } catch { /* 无 portal 时退回内联渲染 */ }
+    const { useCallback, useEffect, useMemo, useRef, useState } = React
 
     const API = '/quota-pacer'
     const MAIN_KEY = 'quota-pacer'
@@ -97,6 +99,21 @@ window.__ModuleLoader__.load({
       '.qp-toast[data-kind="err"]{color:var(--dsw-alias-state-error-primary)}',
       '.qp-empty{color:var(--dsw-alias-label-tertiary);font-size:12px;padding:18px 0}',
       '.qp-note{font-size:10.5px;color:var(--dsw-alias-label-tertiary);line-height:1.5;margin-top:8px}',
+      '.qp-fchip-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;margin:4px 2px}',
+      '.qp-fchip{position:relative;display:grid;place-items:center;width:36px;height:36px;padding:0;border:0;border-radius:12px;background:transparent;color:var(--dsw-alias-label-primary);cursor:pointer}',
+      '.qp-fchip:hover,.qp-fchip[aria-expanded="true"]{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.qp-fdot{position:absolute;top:6px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--dsw-alias-state-success-primary);box-shadow:0 0 0 2px var(--dsw-alias-bg-base)}',
+      '.qp-fdot[data-tone="warn"]{background:var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary))}',
+      '.qp-fdot[data-tone="danger"]{background:var(--dsw-alias-state-error-primary)}',
+      '.qp-fdot[data-tone="muted"]{background:var(--dsw-alias-label-tertiary)}',
+      '.qp-fpop{position:fixed;left:304px;bottom:18px;z-index:9999;width:min(320px,calc(100vw - 24px));max-height:calc(100vh - 36px);overflow:auto;box-sizing:border-box;padding:11px 12px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-layer-1);backdrop-filter:blur(16px);box-shadow:0 10px 28px #0004;color:var(--dsw-alias-label-primary)}',
+      '.qp-fpop-head{display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:12px;font-weight:650}',
+      '.qp-fpop-row{display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px solid var(--dsw-alias-border-l1);font-size:11.5px}',
+      '.qp-fpop-name{width:46px;color:var(--dsw-alias-label-secondary)}',
+      '.qp-fpop-num{font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary)}',
+      '.qp-fpop-foot{margin-top:7px;padding-top:7px;border-top:1px solid var(--dsw-alias-border-l1);display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--dsw-alias-label-tertiary)}',
+      '.qp-fpop-open{margin-left:auto;border:0;background:transparent;color:var(--dsw-alias-brand-primary);font:inherit;font-size:11px;cursor:pointer;padding:2px}',
+      '@media (max-width:720px){.qp-fpop{left:12px;bottom:70px;width:calc(100vw - 24px)}}',
     ].join('')
 
     function clamp(value, min, max) {
@@ -338,6 +355,94 @@ window.__ModuleLoader__.load({
           toast ? h('span', { className: 'qp-toast', 'data-kind': toast.kind }, toast.text) : null))
     }
 
+    function FooterStatus() {
+      const [state, setState] = useState(null)
+      const [error, setError] = useState('')
+      const [open, setOpen] = useState(false)
+      const wrap = useRef(null)
+
+      const load = useCallback(async () => {
+        try {
+          const next = await api('/state')
+          setState(next)
+          setError('')
+        } catch (e) {
+          setError(e.message || String(e))
+        }
+      }, [])
+
+      useEffect(() => {
+        let alive = true
+        const run = () => { if (alive) load() }
+        run()
+        const id = setInterval(run, 60_000)
+        return () => { alive = false; clearInterval(id) }
+      }, [load])
+
+      useEffect(() => {
+        if (!open) return undefined
+        const onDown = (event) => {
+          if (event.target?.closest?.('.qp-fpop')) return
+          if (wrap.current && !wrap.current.contains(event.target)) setOpen(false)
+        }
+        const onKey = (event) => { if (event.key === 'Escape') setOpen(false) }
+        document.addEventListener('pointerdown', onDown, true)
+        document.addEventListener('keydown', onKey, true)
+        return () => {
+          document.removeEventListener('pointerdown', onDown, true)
+          document.removeEventListener('keydown', onKey, true)
+        }
+      }, [open])
+
+      const go = state?.sources?.find((item) => item.id === 'opencode-go')
+      const ds = state?.sources?.find((item) => item.id === 'deepseek-official')
+      const list = go ? WINDOW_ORDER.map((kind) => ({ kind, result: go.windows?.[kind] })).filter((item) => item.result?.ok) : []
+      const rank = { over: 4, fast: 3, onTrack: 2, ahead: 1, unknown: 0 }
+      const worst = [...list].sort((a, b) => (rank[b.result.verdict] ?? 0) - (rank[a.result.verdict] ?? 0) || (b.result.pace ?? 0) - (a.result.pace ?? 0))[0]
+      const verdict = VERDICT[worst?.result?.verdict ?? 'unknown'] ?? VERDICT.unknown
+      const tone = error || go?.status === 'error' || go?.status === 'key-missing' ? 'muted' : verdict.tone
+      const title = error
+        ? '额度配速 · 读取失败'
+        : worst
+          ? '额度配速 · ' + (WINDOW_LABEL[worst.kind] ?? worst.kind) + ' ' + fmtPace(worst.result.pace) + ' · ' + verdict.label
+          : '额度配速 · 暂无数据'
+
+      const openFull = () => {
+        setOpen(false)
+        const nodes = [...document.querySelectorAll('[role="tab"], button')]
+        const target = nodes.find((node) => node.textContent?.trim() === '额度配速' && !wrap.current?.contains(node))
+        target?.click()
+      }
+
+      const popover = open ? h('div', { className: 'qp-fpop', role: 'dialog', 'aria-label': '额度配速摘要' },
+        h('div', { className: 'qp-fpop-head' },
+          '额度配速', h('span', { className: 'qp-chip', 'data-tone': verdict.tone }, verdict.label)),
+        list.length === 0
+          ? h('div', { className: 'qp-note' }, error || '暂无窗口数据。')
+          : list.map(({ kind, result }) => h('div', { className: 'qp-fpop-row', key: kind },
+            h('span', { className: 'qp-fpop-name' }, WINDOW_LABEL[kind] ?? kind),
+            h('span', { className: 'qp-fpop-num' }, fmtPct(result.percent) + ' / ' + fmtPct(result.timePercent)),
+            h('span', { className: 'qp-fpop-num' }, fmtPace(result.pace)),
+            h('span', { className: 'qp-chip', 'data-tone': (VERDICT[result.verdict] ?? VERDICT.unknown).tone }, (VERDICT[result.verdict] ?? VERDICT.unknown).label))),
+        h('div', { className: 'qp-fpop-foot' },
+          go?.today ? h('span', null, '今日 ' + fmtMoney(go.today.allowanceCost)) : null,
+          ds?.balance ? h('span', null, 'DeepSeek ' + fmtMoney(ds.balance.total, ds.balance.currency)) : null,
+          h('button', { type: 'button', className: 'qp-fpop-open', onClick: openFull }, '打开完整面板')),
+        h('div', { className: 'qp-note' }, '白点是时间进度；配速 = 已用% ÷ 时间%。'))
+        : null
+
+      return h(React.Fragment, null,
+        h('style', null, STYLE),
+        h('div', { className: 'qp-fchip-wrap', ref: wrap },
+        h('button', {
+          type: 'button', className: 'qp-fchip', title, 'aria-label': title,
+          'aria-expanded': String(open), onClick: () => setOpen((value) => !value),
+        },
+        h(Icon, { size: 18 }),
+        h('span', { className: 'qp-fdot', 'data-tone': tone })),
+        createPortal && typeof document !== 'undefined' ? createPortal(popover, document.body) : popover))
+    }
+
     function App() {
       const [state, setState] = useState(null)
       const [draft, setDraft] = useState(null)
@@ -441,6 +546,9 @@ window.__ModuleLoader__.load({
           name: 'sidebar.panellist', id: PANEL_ID, order: 9,
           label: () => '额度配速',
         }, () => h(Icon, { size: 16 })))
+        ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
+          name: 'sidebar.footer.action', id: PANEL_ID + '-status', order: 2,
+        }, () => h(FooterStatus)))
       },
     }
   },
