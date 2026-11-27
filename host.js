@@ -16,6 +16,7 @@ import { computeWindow, DEFAULT_THRESHOLDS } from './lib/pacing.js'
 import * as go from './lib/opencode.js'
 import * as deepseek from './lib/deepseek.js'
 import { readLedgerSpend } from './lib/ledger.js'
+import { peakPhase } from './lib/peak.js'
 
 export const name = 'dsh-quota-pacer'
 export const inject = ['webServer', 'connection']
@@ -39,6 +40,7 @@ const DEFAULT_CONFIG = {
       showAmount: true,
       autoProbe: true,
       allowanceFactor: 1.2,
+      holidays: [],
     },
     deepseekOfficial: {
       enabled: true,
@@ -71,6 +73,11 @@ function numberIn(value, min, max, fallback) {
   return Number.isFinite(number) ? Math.min(max, Math.max(min, number)) : fallback
 }
 
+function holidaysOf(value) {
+  if (!Array.isArray(value)) return []
+  return [...new Set(value.filter((day) => typeof day === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(day)))].slice(0, 366)
+}
+
 export function normalizeConfig(raw) {
   const source = raw && typeof raw === 'object' ? raw : {}
   const goRaw = source.sources?.opencodeGo && typeof source.sources.opencodeGo === 'object' ? source.sources.opencodeGo : {}
@@ -95,12 +102,14 @@ export function normalizeConfig(raw) {
         showAmount: bool(goRaw.showAmount, true),
         autoProbe: bool(goRaw.autoProbe, true),
         allowanceFactor: numberIn(goRaw.allowanceFactor, 0.5, 3, 1.2),
+        holidays: holidaysOf(goRaw.holidays),
         apiKey: text(goRaw.apiKey, 300),
       },
       deepseekOfficial: {
         enabled: bool(dsRaw.enabled, true),
         label: text(dsRaw.label, 40) || 'DeepSeek 官方',
         showLocalSpend: bool(dsRaw.showLocalSpend, true),
+        holidays: holidaysOf(dsRaw.holidays),
         apiKey: text(dsRaw.apiKey, 300),
       },
     },
@@ -175,6 +184,7 @@ async function buildGoSource(ctx, config, now) {
     return { ...base, status: 'key-missing', error: '未找到 OpenCode Go Key：可写入 OPENCODE_GO_API_KEY，或在 OpenCode 登录。' }
   }
   base.keySource = resolved.source
+  base.phase = peakPhase(now, { holidays: config.holidays, multiplier: { peak: 2, offPeak: 1 } })
   try {
     const [usage, models] = await Promise.all([
       go.fetchUsage(resolved.key),
@@ -236,6 +246,7 @@ async function buildDeepSeekSource(ctx, config, now) {
     return { ...base, status: 'key-missing', error: '未找到 DEEPSEEK_API_KEY。' }
   }
   base.keySource = resolved.source
+  base.phase = peakPhase(now, { holidays: config.holidays, multiplier: { peak: 1, offPeak: 0.5 } })
   try {
     base.balance = await deepseek.fetchBalance(resolved.key)
   } catch (error) {
