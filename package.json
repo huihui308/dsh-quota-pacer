@@ -1,7 +1,6 @@
 {
   "name": "dsh-quota-pacer",
   "version": "0.1.0",
-  "private": true,
   "description": "OpenCode Go 5h/周/月额度配速：用量与时间进度对齐、期末预测、触顶提醒，并可选择显示哪些来源。",
   "type": "module",
   "main": "index.js",
@@ -23,7 +22,8 @@
     "icon.svg",
     "README.md",
     "docs",
-    "LICENSE"
+    "LICENSE",
+    "README.en.md"
   ],
   "dsh": {
     "bundle": {
@@ -41,5 +41,22 @@
   "scripts": {
     "test": "node --test test/*.test.mjs"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "dsh-plugin",
+    "opencode-go",
+    "deepseek",
+    "quota",
+    "usage",
+    "cost"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/huihui308/dsh-quota-pacer.git"
+  },
+  "homepage": "https://github.com/huihui308/dsh-quota-pacer#readme",
+  "bugs": {
+    "url": "https://github.com/huihui308/dsh-quota-pacer/issues"
+  }
 }
