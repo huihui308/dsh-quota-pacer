@@ -107,7 +107,11 @@ window.__ModuleLoader__.load({
       '.qp-toast[data-kind="err"]{color:var(--dsw-alias-state-error-primary)}',
       '.qp-empty{color:var(--dsw-alias-label-tertiary);font-size:12px;padding:18px 0}',
       '.qp-note{font-size:10.5px;color:var(--dsw-alias-label-tertiary);line-height:1.5;margin-top:8px}',
-      '.qp-side{width:100%;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-bg-base) 90%,#000 10%);backdrop-filter:blur(14px);padding:6px 8px;margin:2px 0;cursor:pointer;font-size:11px;color:var(--dsw-alias-label-primary)}',
+      '.qp-side{--dsw-alias-bg-base:#0e1c18;--dsw-alias-bg-layer-1:#0e1c18;--dsw-alias-bg-layer-2:#1a2d27;--dsw-alias-border-l1:#29443a;--dsw-alias-label-primary:#e8f0e9;--dsw-alias-label-secondary:#c9d8cd;--dsw-alias-label-tertiary:#93a99c;--dsw-alias-brand-primary:#69a98d;--dsw-alias-state-success-primary:#69a98d;--dsw-alias-state-warning-primary:#c9a45c;--dsw-alias-state-error-primary:#c06f6f;--dsw-alias-interactive-bg-hover:#162a23;width:100%;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);border-radius:9px;background:var(--dsw-alias-bg-base);box-shadow:0 8px 22px rgba(0,0,0,.24);padding:6px 8px;margin:2px 0;cursor:pointer;font-size:11px;color:var(--dsw-alias-label-primary)}',
+      '.qp-side[data-theme="forest"]{--dsw-alias-bg-base:#0e1c18;--dsw-alias-bg-layer-1:#0e1c18;--dsw-alias-bg-layer-2:#1a2d27;--dsw-alias-border-l1:#29443a;--dsw-alias-label-primary:#e8f0e9;--dsw-alias-label-secondary:#c9d8cd;--dsw-alias-label-tertiary:#93a99c;--dsw-alias-brand-primary:#69a98d;--dsw-alias-state-success-primary:#69a98d;--dsw-alias-state-warning-primary:#c9a45c;--dsw-alias-state-error-primary:#c06f6f;--dsw-alias-interactive-bg-hover:#162a23}',
+      '.qp-side[data-theme="navy"]{--dsw-alias-bg-base:#0d1b2e;--dsw-alias-bg-layer-1:#0d1b2e;--dsw-alias-bg-layer-2:#1a2a40;--dsw-alias-border-l1:#22364f;--dsw-alias-label-primary:#e6edf5;--dsw-alias-label-secondary:#c8d6e6;--dsw-alias-label-tertiary:#8fa3ba;--dsw-alias-brand-primary:#5b8db8;--dsw-alias-state-success-primary:#6fae9a;--dsw-alias-state-warning-primary:#d8a45e;--dsw-alias-state-error-primary:#c46b6b;--dsw-alias-interactive-bg-hover:#14263c}',
+      '.qp-side[data-theme="graphite"]{--dsw-alias-bg-base:#15181d;--dsw-alias-bg-layer-1:#15181d;--dsw-alias-bg-layer-2:#22272e;--dsw-alias-border-l1:#2d333c;--dsw-alias-label-primary:#e8eaed;--dsw-alias-label-secondary:#c7ccd3;--dsw-alias-label-tertiary:#98a1ac;--dsw-alias-brand-primary:#8093a8;--dsw-alias-state-success-primary:#7aa892;--dsw-alias-state-warning-primary:#c7a36a;--dsw-alias-state-error-primary:#c27b7b;--dsw-alias-interactive-bg-hover:#1c2026}',
+      '.qp-side[data-theme="ivory"]{--dsw-alias-bg-base:#f4f1ea;--dsw-alias-bg-layer-1:#f4f1ea;--dsw-alias-bg-layer-2:#d8d2c5;--dsw-alias-border-l1:#cfc7b8;--dsw-alias-label-primary:#1f2937;--dsw-alias-label-secondary:#334155;--dsw-alias-label-tertiary:#6b7280;--dsw-alias-brand-primary:#1f3a5f;--dsw-alias-state-success-primary:#2f7d5c;--dsw-alias-state-warning-primary:#9a6a1f;--dsw-alias-state-error-primary:#a33a3a;--dsw-alias-interactive-bg-hover:#ece7dd}',
       '.qp-side:hover{background:var(--dsw-alias-interactive-bg-hover)}',
       '.qp-side:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}',
       '.qp-side-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:2px;font-size:10.5px;color:var(--dsw-alias-label-tertiary)}',
@@ -169,6 +173,21 @@ window.__ModuleLoader__.load({
       const number = Number(value)
       if (!Number.isFinite(number)) return '—'
       return (currency === 'CNY' ? '¥' : '$') + number.toFixed(2)
+    }
+
+    function convertMoney(value, from, to, rate) {
+      const number = Number(value)
+      if (!Number.isFinite(number)) return null
+      if (from === to) return number
+      if (from === 'USD' && to === 'CNY') return number * rate
+      if (from === 'CNY' && to === 'USD') return number / rate
+      return number
+    }
+
+    function fmtDisplayMoney(value, from, display) {
+      const to = display?.currency === 'USD' ? 'USD' : 'CNY'
+      const rate = Number(display?.exchangeRate) || 6.66
+      return fmtMoneyExact(convertMoney(value, from, to, rate), to)
     }
 
     function fmtDuration(ms) {
@@ -346,7 +365,8 @@ window.__ModuleLoader__.load({
           h('div', { className: 'qp-phasefill', 'data-peak': peak ? '1' : '0', style: { width: Math.round((phase.progress ?? 0) * 100) + '%' } })))
     }
 
-    function DeepSeekCard({ source }) {
+    function DeepSeekCard({ source, config }) {
+      const display = config?.display ?? {}
       if (!source) return null
       const balance = source.balance
       const spend = source.localSpend
@@ -362,12 +382,12 @@ window.__ModuleLoader__.load({
           : balance
             ? h('div', null,
               h('div', { className: 'qp-balance' },
-                h('span', { className: 'qp-balance-main' }, fmtMoney(balance.total, balance.currency), h('small', null, balance.currency)),
+                h('span', { className: 'qp-balance-main' }, fmtDisplayMoney(balance.total, balance.currency, display), h('small', null, display.currency || balance.currency)),
                 h('span', { className: 'qp-chip', 'data-tone': balance.available ? 'ok' : 'danger' }, balance.available ? '可用' : '不可用')),
               h('div', { className: 'qp-grid' },
-                h('div', { className: 'qp-box' }, h('div', { className: 'qp-box-label' }, '今日花费（本地账本）'), h('div', { className: 'qp-box-value' }, spend ? fmtMoney(spend.todayCost) : '—')),
-                h('div', { className: 'qp-box' }, h('div', { className: 'qp-box-label' }, '本月花费（本地账本）'), h('div', { className: 'qp-box-value' }, spend ? fmtMoney(spend.monthCost) : '—')),
-                h('div', { className: 'qp-box' }, h('div', { className: 'qp-box-label' }, '日均'), h('div', { className: 'qp-box-value' }, spend?.dailyAverage ? fmtMoney(spend.dailyAverage) : '—')),
+                h('div', { className: 'qp-box' }, h('div', { className: 'qp-box-label' }, '今日花费（本地账本）'), h('div', { className: 'qp-box-value' }, spend ? fmtDisplayMoney(spend.todayCost, 'USD', display) : '—')),
+                h('div', { className: 'qp-box' }, h('div', { className: 'qp-box-label' }, '本月花费（本地账本）'), h('div', { className: 'qp-box-value' }, spend ? fmtDisplayMoney(spend.monthCost, 'USD', display) : '—')),
+                h('div', { className: 'qp-box' }, h('div', { className: 'qp-box-label' }, '日均'), h('div', { className: 'qp-box-value' }, spend?.dailyAverage ? fmtDisplayMoney(spend.dailyAverage, 'USD', display) : '—')),
                 h('div', { className: 'qp-box' }, h('div', { className: 'qp-box-label' }, '按日均可撑'), h('div', { className: 'qp-box-value' }, runway !== null && Number.isFinite(runway) ? Math.floor(runway) + ' 天' : '—'))),
               h('div', { className: 'qp-note' }, '余额来自官方 /user/balance；花费来自 cost-meter 账本，仅作参考。'))
             : h('div', { className: 'qp-empty' }, '暂无余额数据。'))
@@ -413,6 +433,27 @@ window.__ModuleLoader__.load({
             h('label', { className: 'qp-check' }, h('input', { type: 'checkbox', checked: ds.showLocalSpend !== false, onChange: (e) => patchDs({ showLocalSpend: e.target.checked }) }), '显示本地账本花费与可撑天数')),
           h('div', { className: 'qp-note' }, '本地花费来自 cost-meter 账本，只读；余额来自官方余额接口。')),
         h('div', { className: 'qp-fieldset' },
+          h('h3', null, '外观与金额'),
+          h('div', { className: 'qp-row' },
+            h('label', null, '卡片配色'),
+            h('select', { className: 'qp-select', value: draft.display.theme, onChange: (e) => setDraft({ ...draft, display: { ...draft.display, theme: e.target.value } }) },
+              h('option', { value: 'navy' }, '深海蓝'),
+              h('option', { value: 'graphite' }, '石墨灰'),
+              h('option', { value: 'forest' }, '墨绿香槟'),
+              h('option', { value: 'ivory' }, '象牙白'))),
+          h('div', { className: 'qp-row' },
+            h('label', null, '显示货币'),
+            h('select', { className: 'qp-select', value: draft.display.currency, onChange: (e) => setDraft({ ...draft, display: { ...draft.display, currency: e.target.value } }) },
+              h('option', { value: 'CNY' }, '人民币 CNY'),
+              h('option', { value: 'USD' }, '美元 USD')),
+            draft.display.currency === 'CNY' ? h('label', null, '汇率') : null,
+            draft.display.currency === 'CNY' ? h('input', {
+              className: 'qp-input', type: 'number', min: 1, max: 20, step: 0.01, value: draft.display.exchangeRate,
+              onChange: (e) => setDraft({ ...draft, display: { ...draft.display, exchangeRate: Number(e.target.value) || 6.66 } }),
+            }) : null,
+            draft.display.currency === 'CNY' ? h('span', { className: 'qp-muted' }, '1 USD = ' + draft.display.exchangeRate + ' CNY') : null),
+          h('div', { className: 'qp-note' }, '配色只影响左侧常驻卡片。币种影响 DeepSeek 余额与本地花费的显示；Go 额度仍按美元。')),
+        h('div', { className: 'qp-fieldset' },
           h('h3', null, '刷新与预警'),
           h('div', { className: 'qp-row' },
             h('label', null, '刷新间隔'),
@@ -446,15 +487,19 @@ window.__ModuleLoader__.load({
       useEffect(() => {
         let alive = true
         const run = () => { if (alive) load() }
+        const onConfig = () => run()
         run()
         const id = setInterval(run, 60_000)
         const tick = setInterval(() => setNow(Date.now()), 30_000)
-        return () => { alive = false; clearInterval(id); clearInterval(tick) }
+        window.addEventListener('quota-pacer:config', onConfig)
+        return () => { alive = false; clearInterval(id); clearInterval(tick); window.removeEventListener('quota-pacer:config', onConfig) }
       }, [load])
 
       const go = state?.sources?.find((item) => item.id === 'opencode-go')
       const ds = state?.sources?.find((item) => item.id === 'deepseek-official')
       const list = go ? WINDOW_ORDER.map((kind) => ({ kind, result: go.windows?.[kind] })).filter((item) => item.result?.ok) : []
+      const theme = state?.config?.display?.theme ?? 'forest'
+      const display = state?.config?.display ?? {}
       const phase = ds?.phase
       const peak = phase?.peak === true
       const remaining = phase?.nextAt ? Math.max(0, phase.nextAt - now) : 0
@@ -469,7 +514,7 @@ window.__ModuleLoader__.load({
       return h(React.Fragment, null,
         h('style', null, STYLE),
         h('div', {
-          className: 'qp-side', role: 'button', tabIndex: 0,
+          className: 'qp-side', 'data-theme': theme, role: 'button', tabIndex: 0,
           title: '打开额度配速完整面板',
           onClick: openFull,
           onKeyDown: (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openFull() } },
@@ -485,14 +530,14 @@ window.__ModuleLoader__.load({
             (phase.nextLabel || '—') + '转' + nextName + ' · ' + fmtShortDuration(remaining))) : null,
         ds && (ds.balance || ds.localSpend) ? h('div', {
           className: 'qp-side-money',
-          title: '余额来自官方 /user/balance；今日花费来自 cost-meter 账本（美元）',
+          title: '余额来自官方 /user/balance；今日花费来自 cost-meter 账本（美元），按设置折算为 ' + (display.currency || 'CNY'),
         },
           h('span', { className: 'qp-side-money-item' },
             h('span', { className: 'qp-side-money-label' }, '余额'),
-            h('b', { className: 'qp-side-money-value' }, ds.balance ? fmtMoneyExact(ds.balance.total, ds.balance.currency) : '—')),
+            h('b', { className: 'qp-side-money-value' }, ds.balance ? fmtDisplayMoney(ds.balance.total, ds.balance.currency, display) : '—')),
           h('span', { className: 'qp-side-money-item' },
             h('span', { className: 'qp-side-money-label' }, '今日'),
-            h('b', { className: 'qp-side-money-value' }, ds.localSpend ? fmtMoneyExact(ds.localSpend.todayCost, 'USD') : '—'))) : null,
+            h('b', { className: 'qp-side-money-value' }, ds.localSpend ? fmtDisplayMoney(ds.localSpend.todayCost, 'USD', display) : '—'))) : null,
         go ? h('div', { className: 'qp-side-go' },
           h('div', { className: 'qp-side-section' },
             h('span', { className: 'qp-side-section-name' }, 'Go'),
@@ -556,6 +601,7 @@ window.__ModuleLoader__.load({
           const result = await api('/config', { method: 'PUT', body: JSON.stringify(draft) })
           setState(result.state)
           setDraft(result.state.config)
+          try { window.dispatchEvent(new Event('quota-pacer:config')) } catch { /* ignore */ }
           setToast({ kind: 'ok', text: '已保存 ' + fmtTime(Date.now()) })
         } catch (e) {
           setToast({ kind: 'err', text: '保存失败：' + (e.message || e) })
@@ -571,6 +617,7 @@ window.__ModuleLoader__.load({
           const result = await api('/probe-tier', { method: 'POST' })
           setState(result.state)
           setDraft(result.state.config)
+          try { window.dispatchEvent(new Event('quota-pacer:config')) } catch { /* ignore */ }
           setToast({ kind: 'ok', text: '套餐档位：' + (result.probe?.billingSource || '未知') })
         } catch (e) {
           setToast({ kind: 'err', text: '探测失败：' + (e.message || e) })
@@ -607,7 +654,7 @@ window.__ModuleLoader__.load({
             ? h(Settings, { state, draft, setDraft, onSave, saving, toast })
             : h('div', { className: 'qp-stack' },
               go ? h(GoCard, { source: go, onProbe, busy: probing }) : null,
-              ds ? h(DeepSeekCard, { source: ds }) : null,
+              ds ? h(DeepSeekCard, { source: ds, config: state.config }) : null,
               !go && !ds ? h('div', { className: 'qp-empty' }, '所有来源都已关闭。到「显示设置」里打开至少一个。') : null,
               h('div', { className: 'qp-note' }, '配速 = 已用百分比 ÷ 已过时间百分比。期末预测假设当前速度不变；5 小时窗口是官方固定 5 小时块，重置时间以接口为准。'))))
     }

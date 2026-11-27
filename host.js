@@ -25,6 +25,7 @@ const ROUTE = '/quota-pacer'
 const MAX_BODY = 256 * 1024
 const CACHE_MS = 55_000
 const TIERS = new Set(['auto', 'go', 'go-plus', 'go-teams'])
+const THEMES = new Set(['navy', 'graphite', 'forest', 'ivory'])
 const TIER_LABEL = { go: 'Go', 'go-plus': 'Go Plus', 'go-teams': 'Go Teams', auto: '自动' }
 
 const DEFAULT_CONFIG = {
@@ -48,7 +49,7 @@ const DEFAULT_CONFIG = {
       showLocalSpend: true,
     },
   },
-  display: { refreshMinutes: 5 },
+  display: { refreshMinutes: 5, theme: 'forest', currency: 'CNY', exchangeRate: 6.66 },
   thresholds: { ...DEFAULT_THRESHOLDS },
 }
 
@@ -115,6 +116,9 @@ export function normalizeConfig(raw) {
     },
     display: {
       refreshMinutes: numberIn(source.display?.refreshMinutes, 1, 60, 5),
+      theme: THEMES.has(source.display?.theme) ? source.display.theme : 'forest',
+      currency: source.display?.currency === 'USD' ? 'USD' : 'CNY',
+      exchangeRate: numberIn(source.display?.exchangeRate, 1, 20, 6.66),
     },
     thresholds: {
       ahead: numberIn(thresholds.ahead, 0.1, 2, DEFAULT_THRESHOLDS.ahead),
