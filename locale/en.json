@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Quota pacer",
+    "description": "Aligns OpenCode Go 5-hour, weekly and monthly quotas with elapsed time, projects overrun, and lets you choose which sources to show."
+  }
+}
