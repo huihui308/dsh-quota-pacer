@@ -239,10 +239,10 @@ window.__ModuleLoader__.load({
           h('span', { className: 'qp-chip' }, source.primaryModel || '未选模型'),
           h('span', { className: 'qp-win-right', style: { marginLeft: 'auto' } },
             h('button', { className: 'qp-btn', onClick: onProbe, disabled: busy || status !== 'ok' }, busy ? '探测中…' : (source.tier ? '重新探测' : '探测套餐档位')))),
-        source.today && source.showAmount !== false && status === 'ok'
+        source.today && status === 'ok'
           ? h('div', { className: 'qp-today' },
-            h('span', null, '今日套餐折算 ', h('b', null, fmtMoney(source.today.allowanceCost))),
-            h('span', { className: 'qp-muted' }, '列表价 ' + fmtMoney(source.today.listCost) + ' × ' + Number(source.allowanceFactor ?? 1).toFixed(2)),
+            source.showAmount !== false ? h('span', null, '今日套餐折算 ', h('b', null, fmtMoney(source.today.allowanceCost))) : null,
+            source.showAmount !== false ? h('span', { className: 'qp-muted' }, '列表价 ' + fmtMoney(source.today.listCost) + ' × ' + Number(source.allowanceFactor ?? 1).toFixed(2)) : null,
             h('span', { className: 'qp-muted' }, source.today.calls + ' 次调用'),
             h('span', { className: 'qp-muted' }, 'token 输入 ' + fmtTokens(source.today.input) + ' · 缓存 ' + fmtTokens(source.today.cacheRead) + ' · 输出 ' + fmtTokens(source.today.output)))
           : null,
