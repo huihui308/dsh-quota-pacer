@@ -400,7 +400,8 @@ window.__ModuleLoader__.load({
       const patchGo = (patch) => setDraft({ ...draft, sources: { ...draft.sources, opencodeGo: { ...go, ...patch } } })
       const patchGoWindow = (kind, value) => patchGo({ windows: { ...go.windows, [kind]: value } })
       const patchDs = (patch) => setDraft({ ...draft, sources: { ...draft.sources, deepseekOfficial: { ...ds, ...patch } } })
-      const models = state.sources?.find((item) => item.id === 'opencode-go')?.models ?? []
+      const models = (state.sources?.find((item) => item.id === 'opencode-go')?.models ?? [])
+        .filter((id) => !/embedding|decision/i.test(id))
       return h('div', { className: 'qp-settings' },
         h('div', { className: 'qp-fieldset' },
           h('h3', null, '显示来源'),
@@ -422,8 +423,12 @@ window.__ModuleLoader__.load({
               h('option', { value: 'go-teams' }, 'Go Teams'))),
           h('div', { className: 'qp-row' },
             h('label', null, '主模型'),
-            h('input', { className: 'qp-input wide', list: 'qp-models', value: go.primaryModel, onChange: (e) => patchGo({ primaryModel: e.target.value }) }),
-            h('datalist', { id: 'qp-models' }, models.map((id) => h('option', { key: id, value: id })))),
+            h('select', {
+              className: 'qp-select', style: { minWidth: '230px' }, value: go.primaryModel,
+              onChange: (e) => patchGo({ primaryModel: e.target.value }),
+            },
+              models.includes(go.primaryModel) ? null : h('option', { value: go.primaryModel }, go.primaryModel),
+              models.map((id) => h('option', { key: id, value: id }, id)))),
           h('div', { className: 'qp-row' },
             h('label', { className: 'qp-check' }, h('input', { type: 'checkbox', checked: go.showAmount !== false, onChange: (e) => patchGo({ showAmount: e.target.checked }) }), '显示套餐折算金额')),
           h('div', { className: 'qp-note' }, '金额 = 官方百分比 × 该模型在当前档位下的月度额度；5 小时窗口用月度额度的 20%，周窗口用 50%。')),
