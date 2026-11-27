@@ -9,8 +9,6 @@ window.__ModuleLoader__.load({
   factory(require) {
     const React = require('react')
     const h = React.createElement
-    let createPortal = null
-    try { createPortal = require('react-dom').createPortal } catch { /* 无 portal 时退回内联渲染 */ }
     const { useCallback, useEffect, useMemo, useRef, useState } = React
 
     const API = '/quota-pacer'
@@ -19,6 +17,7 @@ window.__ModuleLoader__.load({
 
     const WINDOW_LABEL = { fiveHour: '5 小时', weekly: '本周', monthly: '本月' }
     const WINDOW_ORDER = ['fiveHour', 'weekly', 'monthly']
+    const WINDOW_SHORT = { fiveHour: '5h', weekly: '周', monthly: '月' }
     const VERDICT = {
       ahead: { label: '余量充足', tone: 'ok' },
       onTrack: { label: '正常', tone: 'ok' },
@@ -108,21 +107,24 @@ window.__ModuleLoader__.load({
       '.qp-toast[data-kind="err"]{color:var(--dsw-alias-state-error-primary)}',
       '.qp-empty{color:var(--dsw-alias-label-tertiary);font-size:12px;padding:18px 0}',
       '.qp-note{font-size:10.5px;color:var(--dsw-alias-label-tertiary);line-height:1.5;margin-top:8px}',
-      '.qp-fchip-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex:0 0 36px;width:36px;height:36px;margin:4px 2px}',
-      '.qp-fchip{position:relative;display:grid;place-items:center;width:36px;height:36px;padding:0;border:0;border-radius:12px;background:transparent;color:var(--dsw-alias-label-primary);cursor:pointer}',
-      '.qp-fchip:hover,.qp-fchip[aria-expanded="true"]{background:var(--dsw-alias-interactive-bg-hover)}',
-      '.qp-fdot{position:absolute;top:6px;right:5px;width:8px;height:8px;border-radius:50%;background:var(--dsw-alias-state-success-primary);box-shadow:0 0 0 2px var(--dsw-alias-bg-base)}',
-      '.qp-fdot[data-tone="warn"]{background:var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary))}',
-      '.qp-fdot[data-tone="danger"]{background:var(--dsw-alias-state-error-primary)}',
-      '.qp-fdot[data-tone="muted"]{background:var(--dsw-alias-label-tertiary)}',
-      '.qp-fpop{position:fixed;left:304px;bottom:18px;z-index:9999;width:min(320px,calc(100vw - 24px));max-height:calc(100vh - 36px);overflow:auto;box-sizing:border-box;padding:11px 12px;border:1px solid var(--dsw-alias-border-l1);border-radius:12px;background:var(--dsw-alias-bg-layer-1);backdrop-filter:blur(16px);box-shadow:0 10px 28px #0004;color:var(--dsw-alias-label-primary)}',
-      '.qp-fpop-head{display:flex;align-items:center;gap:7px;margin-bottom:7px;font-size:12px;font-weight:650}',
-      '.qp-fpop-row{display:flex;align-items:center;gap:6px;padding:5px 0;border-top:1px solid var(--dsw-alias-border-l1);font-size:11.5px}',
-      '.qp-fpop-name{width:46px;color:var(--dsw-alias-label-secondary)}',
-      '.qp-fpop-num{font-variant-numeric:tabular-nums;color:var(--dsw-alias-label-primary)}',
-      '.qp-fpop-foot{margin-top:7px;padding-top:7px;border-top:1px solid var(--dsw-alias-border-l1);display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:11px;color:var(--dsw-alias-label-tertiary)}',
-      '.qp-fpop-open{margin-left:auto;border:0;background:transparent;color:var(--dsw-alias-brand-primary);font:inherit;font-size:11px;cursor:pointer;padding:2px}',
-      '@media (max-width:720px){.qp-fpop{left:12px;bottom:70px;width:calc(100vw - 24px)}}',
+      '.qp-side{width:100%;box-sizing:border-box;border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:color-mix(in srgb,var(--dsw-alias-bg-base) 90%,#000 10%);backdrop-filter:blur(14px);padding:7px 9px;margin:2px 0;cursor:pointer;font-size:11px;color:var(--dsw-alias-label-primary)}',
+      '.qp-side:hover{background:var(--dsw-alias-interactive-bg-hover)}',
+      '.qp-side:focus-visible{outline:2px solid var(--dsw-alias-brand-primary);outline-offset:-2px}',
+      '.qp-side-head{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:4px;font-size:10.5px;color:var(--dsw-alias-label-tertiary)}',
+      '.qp-side-title{font-weight:650;color:var(--dsw-alias-label-secondary);letter-spacing:.02em}',
+      '.qp-side-open{font-size:10px;color:var(--dsw-alias-label-tertiary)}',
+      '.qp-side-row{display:flex;align-items:center;gap:5px;flex-wrap:nowrap;padding:3px 0;border-top:1px solid var(--dsw-alias-border-l1);line-height:1.3;min-width:0}',
+      '.qp-side-name{width:50px;flex:0 0 auto;color:var(--dsw-alias-label-tertiary);font-size:10.5px}',
+      '.qp-side-pill{display:inline-flex;align-items:center;gap:3px;border-radius:999px;padding:1px 6px;font-size:10px;font-weight:600;white-space:nowrap}',
+      '.qp-side-pill[data-peak="1"]{color:var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary));background:color-mix(in srgb,var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary)) 12%,transparent)}',
+      '.qp-side-pill[data-peak="0"]{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent)}',
+      '.qp-side-next{margin-left:auto;font-size:10px;color:var(--dsw-alias-label-tertiary);white-space:nowrap;flex:0 0 auto}',
+      '.qp-side-nums{font-size:10.5px;color:var(--dsw-alias-label-secondary);font-variant-numeric:tabular-nums;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1 1 auto}',
+      '.qp-side-verdict{margin-left:auto;font-size:10px;white-space:nowrap;color:var(--dsw-alias-label-tertiary);flex:0 0 auto}',
+      '.qp-side-verdict[data-tone="warn"]{color:var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary))}',
+      '.qp-side-verdict[data-tone="danger"]{color:var(--dsw-alias-state-error-primary)}',
+      '.qp-side-verdict[data-tone="ok"]{color:var(--dsw-alias-state-success-primary)}',
+      '.qp-side-error{margin-top:4px;font-size:10px;color:var(--dsw-alias-state-error-primary);line-height:1.4}',
     ].join('')
 
     function clamp(value, min, max) {
@@ -155,6 +157,17 @@ window.__ModuleLoader__.load({
       if (hours < 48) return hours + ' 小时' + (restMin ? ' ' + restMin + ' 分' : '')
       const days = Math.floor(hours / 24)
       return days + ' 天' + (hours % 24 ? ' ' + (hours % 24) + ' 小时' : '')
+    }
+
+    function fmtShortDuration(ms) {
+      if (!Number.isFinite(ms) || ms <= 0) return '即将'
+      const minutes = Math.round(ms / 60000)
+      if (minutes < 60) return minutes + 'm'
+      const hours = Math.floor(minutes / 60)
+      const rest = minutes % 60
+      if (hours < 48) return hours + 'h' + (rest ? ' ' + rest + 'm' : '')
+      const days = Math.floor(hours / 24)
+      return days + 'd' + (hours % 24 ? ' ' + (hours % 24) + 'h' : '')
     }
 
     function fmtTokens(value) {
@@ -392,11 +405,10 @@ window.__ModuleLoader__.load({
           toast ? h('span', { className: 'qp-toast', 'data-kind': toast.kind }, toast.text) : null))
     }
 
-    function FooterStatus() {
+    function SidebarStatus() {
       const [state, setState] = useState(null)
       const [error, setError] = useState('')
-      const [open, setOpen] = useState(false)
-      const wrap = useRef(null)
+      const [now, setNow] = useState(Date.now())
 
       const load = useCallback(async () => {
         try {
@@ -413,23 +425,9 @@ window.__ModuleLoader__.load({
         const run = () => { if (alive) load() }
         run()
         const id = setInterval(run, 60_000)
-        return () => { alive = false; clearInterval(id) }
+        const tick = setInterval(() => setNow(Date.now()), 30_000)
+        return () => { alive = false; clearInterval(id); clearInterval(tick) }
       }, [load])
-
-      useEffect(() => {
-        if (!open) return undefined
-        const onDown = (event) => {
-          if (event.target?.closest?.('.qp-fpop')) return
-          if (wrap.current && !wrap.current.contains(event.target)) setOpen(false)
-        }
-        const onKey = (event) => { if (event.key === 'Escape') setOpen(false) }
-        document.addEventListener('pointerdown', onDown, true)
-        document.addEventListener('keydown', onKey, true)
-        return () => {
-          document.removeEventListener('pointerdown', onDown, true)
-          document.removeEventListener('keydown', onKey, true)
-        }
-      }, [open])
 
       const go = state?.sources?.find((item) => item.id === 'opencode-go')
       const ds = state?.sources?.find((item) => item.id === 'deepseek-official')
@@ -437,47 +435,41 @@ window.__ModuleLoader__.load({
       const rank = { over: 4, fast: 3, onTrack: 2, ahead: 1, unknown: 0 }
       const worst = [...list].sort((a, b) => (rank[b.result.verdict] ?? 0) - (rank[a.result.verdict] ?? 0) || (b.result.pace ?? 0) - (a.result.pace ?? 0))[0]
       const verdict = VERDICT[worst?.result?.verdict ?? 'unknown'] ?? VERDICT.unknown
-      const tone = error || go?.status === 'error' || go?.status === 'key-missing' ? 'muted' : verdict.tone
-      const title = error
-        ? '额度配速 · 读取失败'
-        : worst
-          ? '额度配速 · ' + (WINDOW_LABEL[worst.kind] ?? worst.kind) + ' ' + fmtPace(worst.result.pace) + ' · ' + verdict.label
-          : '额度配速 · 暂无数据'
+      const phase = ds?.phase
+      const peak = phase?.peak === true
+      const remaining = phase?.nextAt ? Math.max(0, phase.nextAt - now) : 0
+      const nextName = phase?.nextInPeak ? '峰' : '谷'
+      const goNums = list.map(({ kind, result }) => (WINDOW_SHORT[kind] || kind) + ' ' + Math.round(result.percent) + '%').join(' · ')
 
       const openFull = () => {
-        setOpen(false)
         const nodes = [...document.querySelectorAll('[role="tab"], button')]
-        const target = nodes.find((node) => node.textContent?.trim() === '额度配速' && !wrap.current?.contains(node))
+        const target = nodes.find((node) => node.textContent?.trim() === '额度配速')
         target?.click()
       }
 
-      const popover = open ? h('div', { className: 'qp-fpop', role: 'dialog', 'aria-label': '额度配速摘要' },
-        h('div', { className: 'qp-fpop-head' },
-          '额度配速', h('span', { className: 'qp-chip', 'data-tone': verdict.tone }, verdict.label)),
-        list.length === 0
-          ? h('div', { className: 'qp-note' }, error || '暂无窗口数据。')
-          : list.map(({ kind, result }) => h('div', { className: 'qp-fpop-row', key: kind },
-            h('span', { className: 'qp-fpop-name' }, WINDOW_LABEL[kind] ?? kind),
-            h('span', { className: 'qp-fpop-num' }, fmtPct(result.percent) + ' / ' + fmtPct(result.timePercent)),
-            h('span', { className: 'qp-fpop-num' }, fmtPace(result.pace)),
-            h('span', { className: 'qp-chip', 'data-tone': (VERDICT[result.verdict] ?? VERDICT.unknown).tone }, (VERDICT[result.verdict] ?? VERDICT.unknown).label))),
-        h('div', { className: 'qp-fpop-foot' },
-          go?.today ? h('span', null, '今日 ' + fmtMoney(go.today.allowanceCost)) : null,
-          ds?.balance ? h('span', null, 'DeepSeek ' + fmtMoney(ds.balance.total, ds.balance.currency)) : null,
-          h('button', { type: 'button', className: 'qp-fpop-open', onClick: openFull }, '打开完整面板')),
-        h('div', { className: 'qp-note' }, '白点是时间进度；配速 = 已用% ÷ 时间%。'))
-        : null
-
       return h(React.Fragment, null,
         h('style', null, STYLE),
-        h('div', { className: 'qp-fchip-wrap', ref: wrap },
-        h('button', {
-          type: 'button', className: 'qp-fchip', title, 'aria-label': title,
-          'aria-expanded': String(open), onClick: () => setOpen((value) => !value),
+        h('div', {
+          className: 'qp-side', role: 'button', tabIndex: 0,
+          title: '打开额度配速完整面板',
+          onClick: openFull,
+          onKeyDown: (event) => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openFull() } },
         },
-        h(Icon, { size: 18 }),
-        h('span', { className: 'qp-fdot', 'data-tone': tone })),
-        createPortal && typeof document !== 'undefined' ? createPortal(popover, document.body) : popover))
+        h('div', { className: 'qp-side-head' },
+          h('span', { className: 'qp-side-title' }, '额度配速'),
+          h('span', { className: 'qp-side-open' }, '详情 ↗')),
+        phase ? h('div', { className: 'qp-side-row' },
+          h('span', { className: 'qp-side-name' }, 'DeepSeek'),
+          h('span', { className: 'qp-side-pill', 'data-peak': peak ? '1' : '0' },
+            (peak ? '☀ 峰 ' : '☾ 谷 ') + phase.multiplier + '×'),
+          h('span', { className: 'qp-side-next' },
+            (phase.nextLabel || '—') + '转' + nextName + ' · ' + fmtShortDuration(remaining))) : null,
+        go ? h('div', { className: 'qp-side-row' },
+          h('span', { className: 'qp-side-name' }, 'Go'),
+          h('span', { className: 'qp-side-nums' }, goNums || '暂无窗口'),
+          worst ? h('span', { className: 'qp-side-verdict', 'data-tone': verdict.tone, title: (WINDOW_LABEL[worst.kind] || '') + ' ' + fmtPace(worst.result.pace) + ' · ' + verdict.label },
+            (worst.result.verdict === 'over' ? '⚠ ' : worst.result.verdict === 'fast' ? '! ' : '') + (WINDOW_SHORT[worst.kind] || '') + ' ' + fmtPace(worst.result.pace)) : null) : null,
+        error ? h('div', { className: 'qp-side-error' }, error) : null))
     }
 
     function App() {
@@ -585,7 +577,7 @@ window.__ModuleLoader__.load({
         }, () => h(Icon, { size: 16 })))
         ctx.slots.inject('sidebar.footer.action', () => ctx.slots.register({
           name: 'sidebar.footer.action', id: PANEL_ID + '-status', order: 2,
-        }, () => h(FooterStatus)))
+        }, () => h(SidebarStatus)))
       },
     }
   },
