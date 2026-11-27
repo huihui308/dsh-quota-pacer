@@ -120,6 +120,10 @@ window.__ModuleLoader__.load({
       '.qp-side-pill[data-peak="0"]{color:var(--dsw-alias-state-success-primary);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 12%,transparent)}',
       '.qp-side-next{margin-left:auto;font-size:10px;color:var(--dsw-alias-label-tertiary);white-space:nowrap;flex:0 0 auto}',
       '.qp-side-go{margin-top:1px}',
+      '.qp-side-money{display:flex;align-items:center;gap:14px;padding:2px 0 3px 50px;border-top:1px solid var(--dsw-alias-border-l1);font-size:10px;color:var(--dsw-alias-label-tertiary);min-width:0}',
+      '.qp-side-money-item{display:inline-flex;align-items:baseline;gap:3px;min-width:0}',
+      '.qp-side-money-label{font-size:9px;color:var(--dsw-alias-label-tertiary)}',
+      '.qp-side-money-value{font-size:11px;font-weight:600;color:var(--dsw-alias-label-primary);font-variant-numeric:tabular-nums;white-space:nowrap}',
       '.qp-side-section{display:flex;align-items:center;gap:5px;padding:1px 0 0;font-size:9px;color:var(--dsw-alias-label-tertiary)}',
       '.qp-side-section-name{font-weight:650;color:var(--dsw-alias-label-secondary)}',
       '.qp-side-gophase{display:inline-flex;align-items:center;gap:3px;border-radius:999px;padding:0 5px;font-size:9px;font-weight:600}',
@@ -159,6 +163,12 @@ window.__ModuleLoader__.load({
       const symbol = currency === 'CNY' ? '¥' : '$'
       const number = Number(value)
       return symbol + (number >= 100 ? number.toFixed(0) : number.toFixed(2))
+    }
+
+    function fmtMoneyExact(value, currency = 'USD') {
+      const number = Number(value)
+      if (!Number.isFinite(number)) return '—'
+      return (currency === 'CNY' ? '¥' : '$') + number.toFixed(2)
     }
 
     function fmtDuration(ms) {
@@ -473,6 +483,16 @@ window.__ModuleLoader__.load({
             (peak ? '☀ 峰 ' : '☾ 谷 ') + phase.multiplier + '×'),
           h('span', { className: 'qp-side-next' },
             (phase.nextLabel || '—') + '转' + nextName + ' · ' + fmtShortDuration(remaining))) : null,
+        ds && (ds.balance || ds.localSpend) ? h('div', {
+          className: 'qp-side-money',
+          title: '余额来自官方 /user/balance；今日花费来自 cost-meter 账本（美元）',
+        },
+          h('span', { className: 'qp-side-money-item' },
+            h('span', { className: 'qp-side-money-label' }, '余额'),
+            h('b', { className: 'qp-side-money-value' }, ds.balance ? fmtMoneyExact(ds.balance.total, ds.balance.currency) : '—')),
+          h('span', { className: 'qp-side-money-item' },
+            h('span', { className: 'qp-side-money-label' }, '今日'),
+            h('b', { className: 'qp-side-money-value' }, ds.localSpend ? fmtMoneyExact(ds.localSpend.todayCost, 'USD') : '—'))) : null,
         go ? h('div', { className: 'qp-side-go' },
           h('div', { className: 'qp-side-section' },
             h('span', { className: 'qp-side-section-name' }, 'Go'),
