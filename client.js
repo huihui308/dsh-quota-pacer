@@ -131,6 +131,15 @@ window.__ModuleLoader__.load({
       return days + ' 天' + (hours % 24 ? ' ' + (hours % 24) + ' 小时' : '')
     }
 
+    function fmtTokens(value) {
+      const n = Number(value)
+      if (!Number.isFinite(n) || n <= 0) return '0'
+      if (n >= 1e9) return (n / 1e9).toFixed(2) + 'B'
+      if (n >= 1e6) return (n / 1e6).toFixed(2) + 'M'
+      if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K'
+      return String(Math.round(n))
+    }
+
     function fmtClock(value) {
       const date = new Date(value)
       if (!Number.isFinite(date.getTime())) return '—'
@@ -234,7 +243,8 @@ window.__ModuleLoader__.load({
           ? h('div', { className: 'qp-today' },
             h('span', null, '今日套餐折算 ', h('b', null, fmtMoney(source.today.allowanceCost))),
             h('span', { className: 'qp-muted' }, '列表价 ' + fmtMoney(source.today.listCost) + ' × ' + Number(source.allowanceFactor ?? 1).toFixed(2)),
-            h('span', { className: 'qp-muted' }, source.today.calls + ' 次调用'))
+            h('span', { className: 'qp-muted' }, source.today.calls + ' 次调用'),
+            h('span', { className: 'qp-muted' }, 'token 输入 ' + fmtTokens(source.today.input) + ' · 缓存 ' + fmtTokens(source.today.cacheRead) + ' · 输出 ' + fmtTokens(source.today.output)))
           : null,
         status === 'key-missing' || status === 'error'
           ? h('div', { className: 'qp-error' }, source.error || '查询失败')
