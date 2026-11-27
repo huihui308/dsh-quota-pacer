@@ -80,6 +80,15 @@ window.__ModuleLoader__.load({
       '.qp-balance{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin:4px 0 8px}',
       '.qp-balance-main{font-size:26px;font-weight:700;font-variant-numeric:tabular-nums;line-height:1.1}',
       '.qp-balance-main small{font-size:12px;font-weight:500;color:var(--dsw-alias-label-tertiary);margin-left:4px}',
+      '.qp-phase{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border:1px solid var(--dsw-alias-border-l1);border-radius:8px;padding:7px 9px;margin:2px 0 6px;font-size:11.5px;background:var(--dsw-alias-bg-base)}',
+      '.qp-phase[data-peak="1"]{border-color:color-mix(in srgb,var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary)) 38%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary)) 8%,transparent)}',
+      '.qp-phase[data-peak="0"]{border-color:color-mix(in srgb,var(--dsw-alias-state-success-primary) 32%,transparent);background:color-mix(in srgb,var(--dsw-alias-state-success-primary) 7%,transparent)}',
+      '.qp-phase-main{display:flex;align-items:center;gap:6px;min-width:0}',
+      '.qp-phase-main b{font-size:12.5px}',
+      '.qp-phase-next{margin-left:auto;color:var(--dsw-alias-label-tertiary);font-size:11px;white-space:nowrap}',
+      '.qp-phasebar{height:4px;border-radius:999px;background:var(--dsw-alias-bg-layer-2);overflow:hidden;margin:0 0 8px}',
+      '.qp-phasefill{height:100%;border-radius:999px;background:var(--dsw-alias-state-warning-primary,var(--dsw-alias-brand-primary));transition:width .3s ease}',
+      '.qp-phasefill[data-peak="0"]{background:var(--dsw-alias-state-success-primary)}',
       '.qp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-top:6px}',
       '.qp-box{border:1px solid var(--dsw-alias-border-l1);border-radius:7px;padding:7px 9px;background:var(--dsw-alias-bg-base)}',
       '.qp-box-label{font-size:10px;color:var(--dsw-alias-label-tertiary)}',
@@ -254,6 +263,11 @@ window.__ModuleLoader__.load({
           h('span', { className: 'qp-card-title' }, source.label || 'OpenCode Go'),
           h('span', { className: 'qp-chip' }, source.tierLabel || '档位未知'),
           h('span', { className: 'qp-chip' }, source.primaryModel || '未选模型'),
+          source.phase ? h('span', {
+            className: 'qp-chip',
+            'data-tone': source.phase.peak ? 'warn' : 'ok',
+            title: '下次转' + (source.phase.nextInPeak ? '高峰' : '空闲') + ' ' + (source.phase.nextLabel || '—'),
+          }, (source.phase.peak ? '☀ 峰 ' : '☾ 谷 ') + source.phase.multiplier + '×') : null,
           h('span', { className: 'qp-win-right', style: { marginLeft: 'auto' } },
             h('button', { className: 'qp-btn', onClick: onProbe, disabled: busy || status !== 'ok' }, busy ? '探测中…' : (source.tier ? '重新探测' : '探测套餐档位')))),
         source.today && status === 'ok'
@@ -274,6 +288,28 @@ window.__ModuleLoader__.load({
           (source.tier === null ? ' · 档位未知：先探测档位，金额才可用' : ' · 金额口径：列表价 × 档位倍率 = 套餐折算')))
     }
 
+    function PhaseStatus({ phase }) {
+      const [now, setNow] = useState(Date.now())
+      useEffect(() => {
+        const id = setInterval(() => setNow(Date.now()), 30_000)
+        return () => clearInterval(id)
+      }, [])
+      if (!phase) return null
+      const peak = phase.peak === true
+      const remaining = phase.nextAt ? Math.max(0, phase.nextAt - now) : 0
+      const next = phase.nextInPeak ? '高峰' : '谷时'
+      return h(React.Fragment, null,
+        h('div', { className: 'qp-phase', 'data-peak': peak ? '1' : '0', title: '工作日 09:00–12:00 / 14:00–18:00 为高峰；周末与法定节假日全天为谷。' },
+          h('div', { className: 'qp-phase-main' },
+            h('span', null, peak ? '☀' : '☾'),
+            h('b', null, peak ? '当前高峰' : '当前谷时'),
+            h('span', { className: 'qp-muted' }, phase.multiplier + '× 计费')),
+          h('span', { className: 'qp-phase-next' },
+            '下次转' + next + ' ' + (phase.nextLabel || '—') + ' · ' + fmtDuration(remaining))),
+        h('div', { className: 'qp-phasebar' },
+          h('div', { className: 'qp-phasefill', 'data-peak': peak ? '1' : '0', style: { width: Math.round((phase.progress ?? 0) * 100) + '%' } })))
+    }
+
     function DeepSeekCard({ source }) {
       if (!source) return null
       const balance = source.balance
@@ -284,6 +320,7 @@ window.__ModuleLoader__.load({
           h('span', { className: 'qp-dot', 'data-status': source.status }),
           h('span', { className: 'qp-card-title' }, source.label || 'DeepSeek 官方'),
           h('span', { className: 'qp-chip' }, '按量')),
+        h(PhaseStatus, { phase: source.phase }),
         source.status === 'key-missing' || source.status === 'error'
           ? h('div', { className: 'qp-error' }, source.error || '查询失败')
           : balance
