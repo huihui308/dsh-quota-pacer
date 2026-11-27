@@ -1,0 +1,4 @@
+# dsh-quota-pacer bundle patch: mount the quota pacer.
+- insert:
+    - id: quota-pacer
+      name: 'dsh-quota-pacer'
