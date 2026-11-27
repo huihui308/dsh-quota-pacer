@@ -41,6 +41,13 @@ window.__ModuleLoader__.load({
       '.qp-tab{border:none;background:transparent;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:12.5px;padding:7px 13px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}',
       '.qp-tab:hover{color:var(--dsw-alias-label-primary)}',
       '.qp-tab[data-on="1"]{color:var(--dsw-alias-brand-primary);border-bottom-color:var(--dsw-alias-brand-primary);font-weight:600}',
+      '.qp-sheets{display:flex;gap:2px;border-bottom:1px solid var(--dsw-alias-border-l1);margin:0 0 11px;flex-wrap:wrap}',
+      '.qp-sheet{display:inline-flex;align-items:center;gap:6px;border:none;background:transparent;color:var(--dsw-alias-label-tertiary);font:inherit;font-size:12.5px;padding:7px 13px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px}',
+      '.qp-sheet:hover{color:var(--dsw-alias-label-primary)}',
+      '.qp-sheet[data-on="1"]{color:var(--dsw-alias-brand-primary);border-bottom-color:var(--dsw-alias-brand-primary);font-weight:600}',
+      '.qp-sheet-dot{width:6px;height:6px;border-radius:50%;background:var(--dsw-alias-state-success-primary);flex:0 0 auto}',
+      '.qp-sheet-dot[data-tone="danger"]{background:var(--dsw-alias-state-error-primary)}',
+      '.qp-sheet-dot[data-tone="muted"]{background:var(--dsw-alias-label-tertiary)}',
       '.qp-body{flex:1;min-height:0;overflow:auto;padding:14px 18px 28px}',
       '.qp-stack{display:flex;flex-direction:column;gap:12px;max-width:860px}',
       '.qp-card{border:1px solid var(--dsw-alias-border-l1);border-radius:10px;background:var(--dsw-alias-bg-layer-1);backdrop-filter:blur(12px);box-shadow:0 1px 2px rgba(0,0,0,.18);padding:13px 15px}',
@@ -393,7 +400,20 @@ window.__ModuleLoader__.load({
             : h('div', { className: 'qp-empty' }, '暂无余额数据。'))
     }
 
+    function SheetTabs({ items, value, onChange }) {
+      if (!items || items.length < 2) return null
+      return h('div', { className: 'qp-sheets', role: 'tablist' },
+        items.map((item) => h('button', {
+          key: item.id, type: 'button', role: 'tab', className: 'qp-sheet',
+          'data-on': item.id === value ? '1' : '0', 'aria-selected': item.id === value ? 'true' : 'false',
+          onClick: () => onChange(item.id),
+        },
+          item.dot ? h('span', { className: 'qp-sheet-dot', 'data-tone': item.dot }) : null,
+          item.label)))
+    }
+
     function Settings({ state, draft, setDraft, onSave, saving, toast }) {
+      const [providerSheet, setProviderSheet] = useState('opencode-go')
       if (!state || !draft) return null
       const go = draft.sources.opencodeGo
       const ds = draft.sources.deepseekOfficial
@@ -408,8 +428,16 @@ window.__ModuleLoader__.load({
           h('div', { className: 'qp-row' },
             h('label', { className: 'qp-check' }, h('input', { type: 'checkbox', checked: go.enabled, onChange: (e) => patchGo({ enabled: e.target.checked }) }), 'OpenCode Go'),
             h('label', { className: 'qp-check' }, h('input', { type: 'checkbox', checked: ds.enabled, onChange: (e) => patchDs({ enabled: e.target.checked }) }), 'DeepSeek 官方'))),
-        h('div', { className: 'qp-fieldset' },
-          h('h3', null, 'OpenCode Go'),
+        h(SheetTabs, {
+          items: [
+            { id: 'opencode-go', label: 'OpenCode Go' },
+            { id: 'deepseek-official', label: 'DeepSeek 官方' },
+          ],
+          value: providerSheet,
+          onChange: setProviderSheet,
+        }),
+        h('div', { className: 'qp-fieldset', style: { display: providerSheet === 'opencode-go' ? '' : 'none' } },
+          h('h3', null, '窗口与档位'),
           h('div', { className: 'qp-row' },
             h('label', null, '显示窗口'),
             WINDOW_ORDER.map((kind) => h('label', { key: kind, className: 'qp-check' },
@@ -432,8 +460,8 @@ window.__ModuleLoader__.load({
           h('div', { className: 'qp-row' },
             h('label', { className: 'qp-check' }, h('input', { type: 'checkbox', checked: go.showAmount !== false, onChange: (e) => patchGo({ showAmount: e.target.checked }) }), '显示套餐折算金额')),
           h('div', { className: 'qp-note' }, '金额 = 官方百分比 × 该模型在当前档位下的月度额度；5 小时窗口用月度额度的 20%，周窗口用 50%。')),
-        h('div', { className: 'qp-fieldset' },
-          h('h3', null, 'DeepSeek 官方'),
+        h('div', { className: 'qp-fieldset', style: { display: providerSheet === 'deepseek-official' ? '' : 'none' } },
+          h('h3', null, '本地花费'),
           h('div', { className: 'qp-row' },
             h('label', { className: 'qp-check' }, h('input', { type: 'checkbox', checked: ds.showLocalSpend !== false, onChange: (e) => patchDs({ showLocalSpend: e.target.checked }) }), '显示本地账本花费与可撑天数')),
           h('div', { className: 'qp-note' }, '本地花费来自 cost-meter 账本，只读；余额来自官方余额接口。')),
@@ -576,6 +604,7 @@ window.__ModuleLoader__.load({
       const [saving, setSaving] = useState(false)
       const [toast, setToast] = useState(null)
       const [probing, setProbing] = useState(false)
+      const [pacingSheet, setPacingSheet] = useState('opencode-go')
 
       const load = useCallback(async (force = false) => {
         setBusy(true)
@@ -642,6 +671,11 @@ window.__ModuleLoader__.load({
       const sources = state.sources ?? []
       const go = sources.find((item) => item.id === 'opencode-go')
       const ds = sources.find((item) => item.id === 'deepseek-official')
+      const sheetItems = [
+        go ? { id: 'opencode-go', label: 'OpenCode Go', dot: go.status === 'ok' ? 'ok' : 'danger' } : null,
+        ds ? { id: 'deepseek-official', label: 'DeepSeek 官方', dot: ds.status === 'ok' ? 'ok' : 'danger' } : null,
+      ].filter(Boolean)
+      const activeSheet = sheetItems.some((item) => item.id === pacingSheet) ? pacingSheet : sheetItems[0]?.id
 
       return h('div', { className: 'qp-root' },
         h('style', null, STYLE),
@@ -658,8 +692,9 @@ window.__ModuleLoader__.load({
           tab === 'settings'
             ? h(Settings, { state, draft, setDraft, onSave, saving, toast })
             : h('div', { className: 'qp-stack' },
-              go ? h(GoCard, { source: go, onProbe, busy: probing }) : null,
-              ds ? h(DeepSeekCard, { source: ds, config: state.config }) : null,
+              h(SheetTabs, { items: sheetItems, value: activeSheet, onChange: setPacingSheet }),
+              activeSheet === 'opencode-go' && go ? h(GoCard, { source: go, onProbe, busy: probing }) : null,
+              activeSheet === 'deepseek-official' && ds ? h(DeepSeekCard, { source: ds, config: state.config }) : null,
               !go && !ds ? h('div', { className: 'qp-empty' }, '所有来源都已关闭。到「显示设置」里打开至少一个。') : null,
               h('div', { className: 'qp-note' }, '配速 = 已用百分比 ÷ 已过时间百分比。期末预测假设当前速度不变；5 小时窗口是官方固定 5 小时块，重置时间以接口为准。'))))
     }
